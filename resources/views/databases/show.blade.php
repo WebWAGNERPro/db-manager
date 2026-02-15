@@ -74,11 +74,11 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6 text-gray-900">
                     <h3 class="text-lg font-semibold mb-4">Assign User to Database</h3>
-                    
+
                     <form method="POST" action="{{ route('permissions.assign') }}">
                         @csrf
                         <input type="hidden" name="managed_database_id" value="{{ $database->id }}">
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label for="database_user_id" class="block text-sm font-medium text-gray-700">Select User</label>
@@ -90,7 +90,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Privileges</label>
                                 <div class="mt-1 space-y-2">
@@ -130,7 +130,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <div class="flex items-end">
                                 <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700">
                                     Assign User
@@ -145,7 +145,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h3 class="text-lg font-semibold mb-4">Assigned Users ({{ $database->users->count() }})</h3>
-                    
+
                     @if($database->users->count() > 0)
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -157,25 +157,25 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach($database->users as $user)
+                                @foreach($permissions as $permission)
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <a href="{{ route('database-users.show', $user) }}" class="text-blue-600 hover:text-blue-800">
-                                                {{ $user->username }}
+                                            <a href="{{ route('database-users.show', $permission->databaseUser) }}" class="text-blue-600 hover:text-blue-800">
+                                                {{ $permission->databaseUser->username }}
                                             </a>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $user->host }}
+                                            {{ $permission->databaseUser->host }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            @foreach(is_array($user->pivot->privileges) ? $user->pivot->privileges : json_decode($user->pivot->privileges, true) as $privilege)
+                                            @foreach(is_array($permission->privileges) ? $permission->privileges : json_decode($permission->privileges, true) as $privilege)
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2 mb-2">
                                                     {{ $privilege }}
                                                 </span>
                                             @endforeach
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <form action="{{ route('permissions.revoke', $user->pivot->id) }}" method="POST" class="inline" onsubmit="return confirm('Revoke all privileges for this user?')">
+                                            <form action="{{ route('permissions.revoke', $permission) }}" method="POST" class="inline" onsubmit="return confirm('Revoke all privileges for this user?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="text-red-600 hover:text-red-900">Revoke</button>

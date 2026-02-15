@@ -56,7 +56,12 @@ class ManagedDatabaseController extends Controller
     {
         $database->load('users');
         $availableUsers = DatabaseUser::where('is_active', true)->get();
-        return view('databases.show', compact('database', 'availableUsers'));
+
+        $permissions = UserDatabasePermission::with('databaseUser')
+            ->where('managed_database_id', $database->id)
+            ->get();
+
+        return view('databases.show', compact('database', 'availableUsers', 'permissions'));
     }
 
     public function edit(ManagedDatabase $database)
