@@ -86,7 +86,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h3 class="text-lg font-semibold mb-4">Assigned Databases ({{ $databaseUser->databases->count() }})</h3>
-                    
+
                     @if($databaseUser->databases->count() > 0)
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -105,7 +105,7 @@
                                             </a>
                                         </td>
                                         <td class="px-6 py-4">
-                                            @foreach($database->pivot->privileges as $privilege)
+                                            @foreach(json_decode($database->pivot->privileges, true) ?? [] as $privilege)
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
                                                     {{ $privilege }}
                                                 </span>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ManagedDatabase;
 use App\Models\DatabaseUser;
+use App\Models\UserDatabasePermission;
 use App\Services\MariaDBService;
 use Illuminate\Http\Request;
 

@@ -26,8 +26,8 @@ class DatabaseUser extends Model
     public function databases(): BelongsToMany
     {
         return $this->belongsToMany(ManagedDatabase::class, 'user_database_permissions')
-            ->withPivot('privileges')
-            ->withTimestamps();
+        ->withPivot(['id', 'privileges']) // 👈 AJOUTER ID ICI
+        ->withTimestamps();
     }
 
     public function permissions()
