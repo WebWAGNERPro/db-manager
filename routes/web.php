@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DatabaseUserController;
+use App\Http\Controllers\DatabaseExplorerController;
 use App\Http\Controllers\ManagedDatabaseController;
 use App\Http\Controllers\PermissionController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Gestion des permissions
     Route::post('permissions/assign', [PermissionController::class, 'assign'])->name('permissions.assign');
     Route::delete('permissions/{permission}', [PermissionController::class, 'revoke'])->name('permissions.revoke');
+
+    // Explorateur de base de données
+    Route::get('/databases/{database}/explorer/{databaseUser}', [DatabaseExplorerController::class, 'index'])->name('databases.explorer');
+    Route::get('/databases/{database}/explorer/{databaseUser}/{table}', [DatabaseExplorerController::class, 'table'])->name('databases.explorer.table');
 });
 
 Route::middleware('auth')->group(function () {

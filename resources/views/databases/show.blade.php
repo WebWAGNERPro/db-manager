@@ -4,7 +4,31 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Database: ') }} {{ $database->database_name }}
             </h2>
-            <div class="space-x-2">
+            <div class="flex items-center space-x-2">
+                @if($permissions->count() > 0)
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" @click.outside="open = false"
+                                class="inline-flex items-center px-4 py-2 bg-orange-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-orange-600">
+                            Explorer
+                            <svg class="ml-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-cloak
+                             class="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                            <div class="py-1">
+                                <p class="px-4 py-2 text-xs text-gray-500 uppercase font-semibold border-b">Se connecter en tant que</p>
+                                @foreach($permissions as $permission)
+                                    <a href="{{ route('databases.explorer', [$database, $permission->databaseUser]) }}"
+                                       class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700">
+                                        <span class="font-mono">{{ $permission->databaseUser->username }}</span>
+                                        <span class="text-gray-400 ml-1">@{{ $permission->databaseUser->host }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 <a href="{{ route('databases.edit', $database) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
                     Edit
                 </a>
@@ -174,7 +198,9 @@
                                                 </span>
                                             @endforeach
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
+                                            <a href="{{ route('databases.explorer', [$database, $permission->databaseUser]) }}"
+                                               class="text-orange-600 hover:text-orange-900 font-medium">Explorer</a>
                                             <form action="{{ route('permissions.revoke', $permission) }}" method="POST" class="inline" onsubmit="return confirm('Revoke all privileges for this user?')">
                                                 @csrf
                                                 @method('DELETE')
