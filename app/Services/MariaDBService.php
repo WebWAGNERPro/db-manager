@@ -72,7 +72,7 @@ class MariaDBService
     public function grantPrivileges(string $username, string $host, string $databaseName, array $privileges): bool
     {
         try {
-            $privs = implode(', ', $privileges);
+            $privs = in_array('ALL PRIVILEGES', $privileges) ? 'ALL PRIVILEGES' : implode(', ', $privileges);
             DB::statement("GRANT {$privs} ON `{$databaseName}`.* TO '{$username}'@'{$host}'");
             return true;
         } catch (\Exception $e) {
