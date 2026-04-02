@@ -21,6 +21,9 @@
                     <x-nav-link :href="route('databases.index')" :active="request()->routeIs('databases.index') || request()->routeIs('databases.show') || request()->routeIs('databases.create') || request()->routeIs('databases.edit')">
                         {{ __('Databases') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('explorer')" :active="request()->routeIs('explorer*')">
+                        {{ __('Explorer') }}
+                    </x-nav-link>
                 </div>
             </div>
 

@@ -18,20 +18,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Gestion des utilisateurs BDD
     Route::resource('database-users', DatabaseUserController::class);
-    
+
     // Gestion des bases de données
     Route::resource('databases', ManagedDatabaseController::class);
-    
+
     // Gestion des permissions
     Route::post('permissions/assign', [PermissionController::class, 'assign'])->name('permissions.assign');
     Route::delete('permissions/{permission}', [PermissionController::class, 'revoke'])->name('permissions.revoke');
 
-    // Explorateur de base de données
-    Route::get('/databases/{database}/explorer/{databaseUser}', [DatabaseExplorerController::class, 'index'])->name('databases.explorer');
-    Route::get('/databases/{database}/explorer/{databaseUser}/{table}', [DatabaseExplorerController::class, 'table'])->name('databases.explorer.table');
-    Route::post('/databases/{database}/explorer/{databaseUser}/{table}', [DatabaseExplorerController::class, 'storeRow'])->name('databases.explorer.store');
-    Route::put('/databases/{database}/explorer/{databaseUser}/{table}', [DatabaseExplorerController::class, 'updateRow'])->name('databases.explorer.update');
-    Route::delete('/databases/{database}/explorer/{databaseUser}/{table}', [DatabaseExplorerController::class, 'deleteRow'])->name('databases.explorer.delete');
+    // Explorateur de base de données (phpMyAdmin-like)
+    Route::get('/explorer', [DatabaseExplorerController::class, 'home'])->name('explorer');
+    Route::get('/explorer/api/{database}/{databaseUser}/tables', [DatabaseExplorerController::class, 'apiTables'])->name('explorer.api.tables');
+    Route::get('/explorer/{database}/{databaseUser}/{table}', [DatabaseExplorerController::class, 'table'])->name('explorer.table');
+    Route::post('/explorer/{database}/{databaseUser}/{table}', [DatabaseExplorerController::class, 'storeRow'])->name('explorer.store');
+    Route::put('/explorer/{database}/{databaseUser}/{table}', [DatabaseExplorerController::class, 'updateRow'])->name('explorer.update');
+    Route::delete('/explorer/{database}/{databaseUser}/{table}', [DatabaseExplorerController::class, 'deleteRow'])->name('explorer.delete');
 });
 
 Route::middleware('auth')->group(function () {

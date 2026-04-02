@@ -25,7 +25,7 @@
                             <div class="py-1">
                                 <p class="px-4 py-2 text-xs text-gray-500 uppercase font-semibold border-b border-gray-700">Se connecter en tant que</p>
                                 @foreach($permissions as $permission)
-                                    <a href="{{ route('databases.explorer', ['database' => $database->id, 'databaseUser' => $permission->database_user_id]) }}"
+                                    <a href="{{ route('explorer') }}"
                                        class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-orange-500/10 hover:text-orange-400 transition">
                                         <span class="font-mono">{{ $permission->databaseUser->username }}</span>
                                         <span class="text-gray-500 ml-1">@{{ $permission->databaseUser->host }}</span>
@@ -188,7 +188,7 @@
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div class="flex items-center gap-3">
-                                                    <a href="{{ route('databases.explorer', ['database' => $database->id, 'databaseUser' => $permission->database_user_id]) }}"
+                                                    <a href="{{ route('explorer') }}"
                                                        class="text-orange-400 hover:text-orange-300 font-medium transition">Explorer</a>
                                                     <form action="{{ route('permissions.revoke', $permission) }}" method="POST" class="inline" onsubmit="return confirm('Revoke all privileges for this user?')">
                                                         @csrf

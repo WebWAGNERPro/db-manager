@@ -45,28 +45,67 @@ class DatabaseExplorerController extends Controller
         }
     }
 
-    public function index(ManagedDatabase $database, DatabaseUser $databaseUser)
+    private function getSidebarData(): array
     {
-        $this->verifyAccess($database, $databaseUser);
+        $permissions = UserDatabasePermission::with(['managedDatabase', 'databaseUser'])
+            ->whereHas('managedDatabase', fn($q) => $q->where('is_active', true))
+            ->whereHas('databaseUser', fn($q) => $q->where('is_active', true))
+            ->get();
 
-        try {
-            $conn   = $this->getConnection($databaseUser, $database);
-            $tables = $conn->select('SHOW TABLE STATUS');
-        } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Connexion impossible : ' . $e->getMessage()]);
-        }
-
-        return view('databases.explorer.index', compact('database', 'databaseUser', 'tables'));
+        return $permissions->groupBy('managed_database_id')->map(function ($perms) {
+            $db = $perms->first()->managedDatabase;
+            return [
+                'id' => $db->id,
+                'name' => $db->database_name,
+                'users' => $perms->map(fn($p) => [
+                    'id' => $p->databaseUser->id,
+                    'username' => $p->databaseUser->username,
+                    'host' => $p->databaseUser->host,
+                ])->unique('id')->values()->toArray(),
+            ];
+        })->values()->toArray();
     }
 
-    public function table(ManagedDatabase $database, DatabaseUser $databaseUser, string $table)
+    public function home()
+    {
+        $sidebarData = $this->getSidebarData();
+
+        return view('explorer.home', compact('sidebarData'));
+    }
+
+    public function apiTables(ManagedDatabase $database, DatabaseUser $databaseUser)
     {
         $this->verifyAccess($database, $databaseUser);
 
         try {
             $conn = $this->getConnection($databaseUser, $database);
+            $tables = $conn->select('SHOW TABLE STATUS');
 
-            // Valider le nom de table contre la liste réelle (sécurité injection)
+            return response()->json(collect($tables)->map(function ($t) {
+                $t = (array) $t;
+                $sizeBytes = ($t['Data_length'] ?? 0) + ($t['Index_length'] ?? 0);
+                return [
+                    'name' => $t['Name'],
+                    'rows' => $t['Rows'] ?? 0,
+                    'engine' => $t['Engine'] ?? '-',
+                    'size' => $sizeBytes >= 1048576
+                        ? number_format($sizeBytes / 1048576, 2) . ' MB'
+                        : number_format($sizeBytes / 1024, 1) . ' KB',
+                ];
+            }));
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function table(ManagedDatabase $database, DatabaseUser $databaseUser, string $table)
+    {
+        $this->verifyAccess($database, $databaseUser);
+        $sidebarData = $this->getSidebarData();
+
+        try {
+            $conn = $this->getConnection($databaseUser, $database);
+
             $validTables = collect($conn->select('SHOW TABLES'))
                 ->map(fn($row) => array_values((array) $row)[0])
                 ->toArray();
@@ -88,8 +127,8 @@ class DatabaseExplorerController extends Controller
             return back()->withErrors(['error' => 'Erreur : ' . $e->getMessage()]);
         }
 
-        return view('databases.explorer.table', compact(
-            'database', 'databaseUser', 'table',
+        return view('explorer.table', compact(
+            'sidebarData', 'database', 'databaseUser', 'table',
             'columns', 'indexes', 'rows', 'total', 'page', 'perPage', 'lastPage'
         ));
     }
@@ -137,8 +176,8 @@ class DatabaseExplorerController extends Controller
         }
 
         return redirect()
-            ->route('databases.explorer.table', [$database, $databaseUser, $table, 'tab' => 'browse', 'page' => $request->input('page', 1)])
-            ->with('success', 'Ligne ajoutée avec succès.');
+            ->route('explorer.table', [$database, $databaseUser, $table, 'tab' => 'browse', 'page' => $request->input('page', 1)])
+            ->with('success', 'Ligne ajoutee avec succes.');
     }
 
     public function updateRow(Request $request, ManagedDatabase $database, DatabaseUser $databaseUser, string $table)
@@ -152,19 +191,19 @@ class DatabaseExplorerController extends Controller
             $query = $conn->table($table);
             foreach ($primaryKeys as $pk) {
                 if (!isset($pkValues[$pk])) {
-                    return back()->withErrors(['error' => "Clé primaire manquante : {$pk}"]);
+                    return back()->withErrors(['error' => "Cle primaire manquante : {$pk}"]);
                 }
                 $query->where($pk, $pkValues[$pk]);
             }
 
             $query->update($data);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Erreur mise à jour : ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Erreur mise a jour : ' . $e->getMessage()]);
         }
 
         return redirect()
-            ->route('databases.explorer.table', [$database, $databaseUser, $table, 'tab' => 'browse', 'page' => $request->input('page', 1)])
-            ->with('success', 'Ligne modifiée avec succès.');
+            ->route('explorer.table', [$database, $databaseUser, $table, 'tab' => 'browse', 'page' => $request->input('page', 1)])
+            ->with('success', 'Ligne modifiee avec succes.');
     }
 
     public function deleteRow(Request $request, ManagedDatabase $database, DatabaseUser $databaseUser, string $table)
@@ -177,7 +216,7 @@ class DatabaseExplorerController extends Controller
             $query = $conn->table($table);
             foreach ($primaryKeys as $pk) {
                 if (!isset($pkValues[$pk])) {
-                    return back()->withErrors(['error' => "Clé primaire manquante : {$pk}"]);
+                    return back()->withErrors(['error' => "Cle primaire manquante : {$pk}"]);
                 }
                 $query->where($pk, $pkValues[$pk]);
             }
@@ -188,7 +227,7 @@ class DatabaseExplorerController extends Controller
         }
 
         return redirect()
-            ->route('databases.explorer.table', [$database, $databaseUser, $table, 'tab' => 'browse', 'page' => $request->input('page', 1)])
-            ->with('success', 'Ligne supprimée avec succès.');
+            ->route('explorer.table', [$database, $databaseUser, $table, 'tab' => 'browse', 'page' => $request->input('page', 1)])
+            ->with('success', 'Ligne supprimee avec succes.');
     }
 }
