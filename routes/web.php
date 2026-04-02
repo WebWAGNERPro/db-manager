@@ -29,6 +29,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Explorateur de base de données
     Route::get('/databases/{database}/explorer/{databaseUser}', [DatabaseExplorerController::class, 'index'])->name('databases.explorer');
     Route::get('/databases/{database}/explorer/{databaseUser}/{table}', [DatabaseExplorerController::class, 'table'])->name('databases.explorer.table');
+    Route::post('/databases/{database}/explorer/{databaseUser}/{table}', [DatabaseExplorerController::class, 'storeRow'])->name('databases.explorer.store');
+    Route::put('/databases/{database}/explorer/{databaseUser}/{table}', [DatabaseExplorerController::class, 'updateRow'])->name('databases.explorer.update');
+    Route::delete('/databases/{database}/explorer/{databaseUser}/{table}', [DatabaseExplorerController::class, 'deleteRow'])->name('databases.explorer.delete');
 });
 
 Route::middleware('auth')->group(function () {
