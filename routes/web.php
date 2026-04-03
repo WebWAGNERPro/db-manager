@@ -33,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/explorer/{database}/{databaseUser}/{table}', [DatabaseExplorerController::class, 'storeRow'])->name('explorer.store');
     Route::put('/explorer/{database}/{databaseUser}/{table}', [DatabaseExplorerController::class, 'updateRow'])->name('explorer.update');
     Route::delete('/explorer/{database}/{databaseUser}/{table}', [DatabaseExplorerController::class, 'deleteRow'])->name('explorer.delete');
+    Route::delete('/explorer/{database}/{databaseUser}/{table}/bulk', [DatabaseExplorerController::class, 'bulkDeleteRows'])->name('explorer.bulk-delete');
 });
 
 Route::middleware('auth')->group(function () {

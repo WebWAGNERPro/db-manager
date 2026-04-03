@@ -17,6 +17,35 @@
     addFields: [],
     columns: @js($columnList),
     primaryKeys: @js($primaryKeys),
+    selectedRows: [],
+    allRows: @js($rows->map(fn($r) => (array) $r)->values()->toArray()),
+    get allSelected() {
+        return this.allRows.length > 0 && this.selectedRows.length === this.allRows.length;
+    },
+    toggleAll() {
+        if (this.allSelected) {
+            this.selectedRows = [];
+        } else {
+            this.selectedRows = this.allRows.map(row => {
+                let pk = {};
+                this.primaryKeys.forEach(k => pk[k] = row[k]);
+                return pk;
+            });
+        }
+    },
+    toggleRow(row) {
+        let pk = {};
+        this.primaryKeys.forEach(k => pk[k] = row[k]);
+        let idx = this.selectedRows.findIndex(s => this.primaryKeys.every(k => s[k] === pk[k]));
+        if (idx > -1) {
+            this.selectedRows.splice(idx, 1);
+        } else {
+            this.selectedRows.push(pk);
+        }
+    },
+    isSelected(row) {
+        return this.selectedRows.some(s => this.primaryKeys.every(k => s[k] == row[k]));
+    },
     openEdit(row) {
         this.editRow = { ...row };
         this.editPk = {};
@@ -83,7 +112,22 @@
     <div x-show="tab === 'browse'" x-cloak class="p-5">
 
         @if($hasPk)
-            <div class="mb-3 flex justify-end">
+            <div class="mb-3 flex items-center justify-between">
+                <div x-show="selectedRows.length > 0" x-cloak x-transition
+                     class="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2">
+                    <span class="text-xs text-red-300">
+                        <span class="font-semibold" x-text="selectedRows.length"></span> ligne(s) selectionnee(s)
+                    </span>
+                    <button @click="$dispatch('open-modal', 'bulk-delete')"
+                            class="inline-flex items-center px-3 py-1 bg-red-600 rounded-lg font-semibold text-xs text-white hover:bg-red-500 transition">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Supprimer
+                    </button>
+                    <button @click="selectedRows = []" class="text-xs text-gray-400 hover:text-gray-200 transition">
+                        Deselectionner
+                    </button>
+                </div>
+                <div x-show="selectedRows.length === 0"></div>
                 <button @click="openAdd()" class="inline-flex items-center px-3 py-1.5 bg-emerald-600 rounded-lg font-semibold text-xs text-white hover:bg-emerald-500 transition">
                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                     Ajouter
@@ -97,6 +141,10 @@
                     <thead>
                         <tr class="bg-gray-800/50">
                             @if($hasPk)
+                                <th class="px-2 py-2 text-center w-8">
+                                    <input type="checkbox" @click="toggleAll()" :checked="allSelected"
+                                           class="rounded border-gray-600 text-emerald-600 bg-gray-800 w-3.5 h-3.5 cursor-pointer focus:ring-emerald-500">
+                                </th>
                                 <th class="px-2 py-2 text-center text-[10px] font-medium text-gray-500 uppercase w-16"></th>
                             @endif
                             @foreach(array_keys((array) $rows->first()) as $colName)
@@ -115,8 +163,12 @@
                     </thead>
                     <tbody class="divide-y divide-gray-800/50">
                         @foreach($rows as $row)
-                            <tr class="hover:bg-gray-800/30 transition-colors group">
+                            <tr class="hover:bg-gray-800/30 transition-colors group" :class="isSelected(@js((array) $row)) && 'bg-emerald-500/5'">
                                 @if($hasPk)
+                                    <td class="px-2 py-1.5 text-center">
+                                        <input type="checkbox" @click="toggleRow(@js((array) $row))" :checked="isSelected(@js((array) $row))"
+                                               class="rounded border-gray-600 text-emerald-600 bg-gray-800 w-3.5 h-3.5 cursor-pointer focus:ring-emerald-500">
+                                    </td>
                                     <td class="px-2 py-1.5 text-center">
                                         <div class="inline-flex opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button @click="openEdit(@js((array) $row))" class="p-1 text-gray-600 hover:text-indigo-400 transition" title="Modifier">
@@ -356,6 +408,33 @@
                 </div>
                 <template x-for="pk in primaryKeys" :key="'dpk-' + pk">
                     <input type="hidden" :name="'pk[' + pk + ']'" :value="deleteRowPk[pk]">
+                </template>
+            </div>
+            <div class="px-6 py-3 border-t border-gray-800 bg-gray-800/30 flex justify-end gap-2">
+                <x-secondary-button x-on:click="$dispatch('close')">Annuler</x-secondary-button>
+                <x-danger-button type="submit">Supprimer</x-danger-button>
+            </div>
+        </form>
+    </x-modal>
+
+    {{-- ===== MODAL BULK DELETE ===== --}}
+    <x-modal name="bulk-delete" maxWidth="md">
+        <div class="px-6 py-3 border-b border-gray-800 bg-red-500/5">
+            <h3 class="text-sm font-semibold text-gray-100">Suppression en masse</h3>
+        </div>
+        <form method="POST" action="{{ route('explorer.bulk-delete', [$database, $databaseUser, $table]) }}">
+            @csrf
+            @method('DELETE')
+            <input type="hidden" name="page" value="{{ $page }}">
+            <div class="px-6 py-4">
+                <p class="text-xs text-gray-400 mb-3">
+                    Vous allez supprimer <strong class="text-red-400" x-text="selectedRows.length"></strong> ligne(s).
+                    Cette action est <strong class="text-red-400">irreversible</strong>.
+                </p>
+                <template x-for="(row, rowIndex) in selectedRows" :key="'bulk-' + rowIndex">
+                    <template x-for="pk in primaryKeys" :key="'bulk-' + rowIndex + '-' + pk">
+                        <input type="hidden" :name="'rows[' + rowIndex + '][' + pk + ']'" :value="row[pk]">
+                    </template>
                 </template>
             </div>
             <div class="px-6 py-3 border-t border-gray-800 bg-gray-800/30 flex justify-end gap-2">

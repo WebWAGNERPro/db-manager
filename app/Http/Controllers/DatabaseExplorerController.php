@@ -230,4 +230,36 @@ class DatabaseExplorerController extends Controller
             ->route('explorer.table', [$database, $databaseUser, $table, 'tab' => 'browse', 'page' => $request->input('page', 1)])
             ->with('success', 'Ligne supprimee avec succes.');
     }
+
+    public function bulkDeleteRows(Request $request, ManagedDatabase $database, DatabaseUser $databaseUser, string $table)
+    {
+        try {
+            $conn = $this->getValidatedConnection($database, $databaseUser, $table);
+            $primaryKeys = $this->getPrimaryKeys($conn, $table);
+            $rows = $request->input('rows', []);
+
+            if (empty($rows)) {
+                return back()->withErrors(['error' => 'Aucune ligne selectionnee.']);
+            }
+
+            $deleted = 0;
+            foreach ($rows as $pkValues) {
+                $query = $conn->table($table);
+                foreach ($primaryKeys as $pk) {
+                    if (!isset($pkValues[$pk])) {
+                        continue 2;
+                    }
+                    $query->where($pk, $pkValues[$pk]);
+                }
+                $query->delete();
+                $deleted++;
+            }
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Erreur suppression : ' . $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('explorer.table', [$database, $databaseUser, $table, 'tab' => 'browse', 'page' => $request->input('page', 1)])
+            ->with('success', $deleted . ' ligne(s) supprimee(s) avec succes.');
+    }
 }
