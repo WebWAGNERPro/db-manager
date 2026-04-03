@@ -1,12 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-100 leading-tight">
+        <h2 class="font-semibold text-sm text-gray-100 leading-tight">
             {{ __('Create Database User') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
+    <div class="p-5">
+        <div class="max-w-2xl mx-auto">
             <div class="bg-gray-900 border border-gray-800 overflow-hidden rounded-xl">
                 <div class="p-6">
                     @if($errors->any())

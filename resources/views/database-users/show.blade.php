@@ -1,19 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-100 leading-tight">
+            <h2 class="font-semibold text-sm text-gray-100 leading-tight">
                 <span class="font-mono text-blue-400">{{ $databaseUser->username }}</span>
                 <span class="text-gray-500">@</span>
                 <span class="text-gray-400">{{ $databaseUser->host }}</span>
             </h2>
             <div class="flex items-center gap-2">
-                <a href="{{ route('database-users.edit', $databaseUser) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 transition">
+                <a href="{{ route('database-users.edit', $databaseUser) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white hover:bg-indigo-500 transition">
                     Edit
                 </a>
                 <form action="{{ route('database-users.destroy', $databaseUser) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this user?')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 transition">
+                    <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-600 border border-transparent rounded-lg font-semibold text-xs text-white hover:bg-red-500 transition">
                         Delete
                     </button>
                 </form>
@@ -21,8 +21,8 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="p-5">
+        <div class="max-w-5xl mx-auto">
             @if(session('success'))
                 <div class="mb-6 flex items-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-lg">
                     <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
